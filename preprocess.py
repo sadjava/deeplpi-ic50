@@ -133,7 +133,7 @@ def seq2embeds(sequences: pd.Series, prosemt: ProSEMT) -> pd.DataFrame:
     vec = []
 
     unique_sequences = sequences.dropna().drop_duplicates()
-    for sequence in tqdm(unique_sequences, desc="Sequence->Embedding"):
+    for sequence in tqdm(unique_sequences.iloc[:5], desc="Sequence->Embedding"):
         x = sequence.encode().upper()
         x = alphabet.encode(x)
         x = torch.from_numpy(x)
@@ -145,7 +145,7 @@ def seq2embeds(sequences: pd.Series, prosemt: ProSEMT) -> pd.DataFrame:
             z = z.cpu().numpy()
         vec.append(z.tolist())
 
-    vec_df = pd.Series(vec, index=unique_sequences.index).to_frame(name="seq_embeds")
+    vec_df = pd.Series(vec, index=unique_sequences.index[:5]).to_frame(name="seq_embeds")
     return vec_df
 
 def process_data(data_dir: str, sub_dir: str, save_dir: str,
@@ -180,11 +180,12 @@ def process_data(data_dir: str, sub_dir: str, save_dir: str,
     mol_embeds = mol2embeds(data['Ligand SMILES'], word2vec)
 
     data = data.iloc[mol_embeds.index]
-    data[['Ligand SMILES']].join(mol_embeds).to_csv(os.path.join(save_sub_dir, "mol_embeds.csv"))
+    mol_embeds.join(data[['Ligand SMILES']])\
+        .set_index('Ligand SMILES').to_csv(os.path.join(save_sub_dir, "mol_embeds.csv"))
 
     seq_embeds = seq2embeds(data['BindingDB Target Chain Sequence'], prosemt)
-    data[['BindingDB Target Chain Sequence']].join(seq_embeds)\
-        .to_csv(os.path.join(save_sub_dir, "seq_embeds.csv"))
+    seq_embeds.join(data[['BindingDB Target Chain Sequence']])\
+        .set_index('BindingDB Target Chain Sequence').to_csv(os.path.join(save_sub_dir, "seq_embeds.csv"))
 
     data.to_csv(os.path.join(save_sub_dir, 'data.csv'))
 
