@@ -133,7 +133,7 @@ def seq2embeds(sequences: pd.Series, prosemt: ProSEMT) -> pd.DataFrame:
     vec = []
 
     unique_sequences = sequences.dropna().drop_duplicates()
-    for sequence in tqdm(unique_sequences.iloc[:5], desc="Sequence->Embedding"):
+    for sequence in tqdm(unique_sequences, desc="Sequence->Embedding"):
         x = sequence.encode().upper()
         x = alphabet.encode(x)
         x = torch.from_numpy(x)
@@ -145,7 +145,7 @@ def seq2embeds(sequences: pd.Series, prosemt: ProSEMT) -> pd.DataFrame:
             z = z.cpu().numpy()
         vec.append(z.tolist())
 
-    vec_df = pd.Series(vec, index=unique_sequences.index[:5]).to_frame(name="seq_embeds")
+    vec_df = pd.Series(vec, index=unique_sequences.index).to_frame(name="seq_embeds")
     return vec_df
 
 def process_data(data_dir: str, sub_dir: str, save_dir: str,
